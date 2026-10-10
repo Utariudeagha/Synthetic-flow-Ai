@@ -1,0 +1,6 @@
+{
+  "name": "Synthetic AI",
+  "description": "Synthetic indices chat analyzer with ML trend prediction, SMC/ICT confluence, interactive multi-timeframe charts, real-time alerts, and liquidity zone tracking.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

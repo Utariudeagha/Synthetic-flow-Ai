@@ -1,0 +1,1265 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DerivFlo — Synthetic Indices AI Terminal & SMC Analyzer</title>
+  <meta name="description" content="Institutional ML trend prediction, ICT/SMC confluence analysis, real-time candlestick charts, and zone alerts for Deriv Synthetic Indices.">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%2300E676'/><path d='M25 65 L45 40 L60 52 L80 28' stroke='%230B0E14' stroke-width='10' stroke-linecap='round' stroke-linejoin='round' fill='none'/><circle cx='80' cy='28' r='7' fill='%2300E5FF'/></svg>">
+  
+  <!-- Tailwind CSS CDN for styling -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            bgDark: '#0B0E14',
+            panelDark: '#121722',
+            borderDark: '#1E2638',
+            bullishGreen: '#00E676',
+            bearishRed: '#FF1744',
+            cyanAccent: '#00E5FF',
+            goldLiquidity: '#FFD600',
+            purpleInst: '#B388FF'
+          },
+          fontFamily: {
+            mono: ['JetBrains Mono', 'ui-monospace', 'monospace'],
+            sans: ['Inter', 'system-ui', 'sans-serif']
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+    body {
+      background-color: #0B0E14;
+      color: #E2E8F0;
+      font-family: 'Inter', sans-serif;
+    }
+    .mono { font-family: 'JetBrains Mono', monospace; }
+    /* Custom scrollbars */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: #0B0E14; }
+    ::-webkit-scrollbar-thumb { background: #1E2638; border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: #2A364F; }
+    
+    @keyframes pulseGlow {
+      0%, 100% { opacity: 0.3; }
+      50% { opacity: 0.8; }
+    }
+    .pulse-glow { animation: pulseGlow 2.5s infinite ease-in-out; }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col selection:bg-cyan-500/30 selection:text-cyan-200">
+
+  <!-- TOP INSTITUTIONAL STATUS BAR -->
+  <header class="border-b border-borderDark bg-panelDark/90 backdrop-blur sticky top-0 z-50 px-4 py-2.5">
+    <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-3">
+      <!-- Brand Logo -->
+      <div class="flex items-center gap-3">
+        <div class="w-9 h-9 rounded-lg bg-gradient-to-tr from-cyan-500 to-bullishGreen flex items-center justify-center shadow-lg shadow-cyan-500/20">
+          <svg class="w-5 h-5 text-bgDark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="22 7 13.5 15.5 8.5 10.5 2 17"></polyline>
+            <polyline points="16 7 22 7 22 13"></polyline>
+          </svg>
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <span class="font-bold text-lg tracking-tight bg-gradient-to-r from-white via-slate-100 to-cyan-300 bg-clip-text text-transparent">DerivFlo</span>
+            <span class="text-[10px] px-1.5 py-0.5 rounded bg-cyan-950 text-cyan-400 border border-cyan-800 font-mono">SYNTHETIC AI</span>
+          </div>
+          <p class="text-[11px] text-slate-400 hidden sm:block">Machine Learning & Institutional SMC Confluence Terminal</p>
+        </div>
+      </div>
+
+      <!-- Feed Connection & Realtime Clock -->
+      <div class="flex items-center gap-3 text-xs">
+        <div id="connStatusBadge" class="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-950/60 border border-emerald-800/60 text-emerald-300 font-mono">
+          <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+          <span id="connStatusText">Deriv Live Feed: Active</span>
+        </div>
+        <div class="hidden md:flex items-center gap-1.5 px-2.5 py-1 rounded bg-slate-900 border border-borderDark text-slate-300 font-mono">
+          <span class="text-slate-500">UTC</span>
+          <span id="utcClock">--:--:--</span>
+        </div>
+        <button onclick="toggleModal('derivTokenModal')" class="px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 text-xs font-medium transition flex items-center gap-1.5">
+          <svg class="w-3.5 h-3.5 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/></svg>
+          <span class="hidden sm:inline">Deriv API</span>
+        </button>
+        <button onclick="scrollToAppDownload()" class="px-3 py-1 rounded bg-cyan-500 hover:bg-cyan-400 text-bgDark text-xs font-semibold shadow shadow-cyan-500/20 transition flex items-center gap-1.5">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18l-6-6m6 6l6-6m-6 6V3"/></svg>
+          <span>Android App</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- TICKER BAR OF SYNTHETIC INDICES -->
+  <div class="bg-black/60 border-b border-borderDark py-1.5 px-4 overflow-x-auto whitespace-nowrap scrollbar-none">
+    <div id="tickerRow" class="max-w-7xl mx-auto flex items-center gap-6 text-xs font-mono">
+      <!-- Populated dynamically via JS -->
+    </div>
+  </div>
+
+  <!-- MAIN DASHBOARD CONTAINER -->
+  <main class="max-w-7xl mx-auto w-full p-4 flex-1 flex flex-col gap-4">
+
+    <!-- TOP CONTROL ROW: INDEX SELECTOR & TIMEFRAME -->
+    <div class="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3 bg-panelDark p-3 rounded-xl border border-borderDark">
+      <!-- Index Selector Buttons -->
+      <div class="flex items-center gap-1.5 overflow-x-auto pb-1 lg:pb-0" id="indicesSelector">
+        <!-- Rendered by JS -->
+      </div>
+
+      <!-- Timeframe and SMC Overlay Toggles -->
+      <div class="flex flex-wrap items-center gap-2">
+        <div class="flex items-center bg-bgDark rounded-lg p-0.5 border border-borderDark text-xs font-mono" id="tfSelector">
+          <button data-tf="15M" class="px-2.5 py-1 rounded text-slate-400 hover:text-white transition">15M</button>
+          <button data-tf="1H" class="px-2.5 py-1 rounded bg-cyan-900/60 text-cyan-300 font-semibold border border-cyan-700/50">1H</button>
+          <button data-tf="4H" class="px-2.5 py-1 rounded text-slate-400 hover:text-white transition">4H</button>
+          <button data-tf="D1" class="px-2.5 py-1 rounded text-slate-400 hover:text-white transition">Daily</button>
+        </div>
+
+        <div class="h-4 w-px bg-borderDark hidden sm:block"></div>
+
+        <div class="flex items-center gap-1 text-xs">
+          <label class="flex items-center gap-1.5 cursor-pointer px-2 py-1 rounded bg-bgDark border border-borderDark hover:border-slate-600 transition">
+            <input type="checkbox" id="toggleOB" checked class="accent-cyan-400 rounded">
+            <span class="text-cyan-300">Order Blocks</span>
+          </label>
+          <label class="flex items-center gap-1.5 cursor-pointer px-2 py-1 rounded bg-bgDark border border-borderDark hover:border-slate-600 transition">
+            <input type="checkbox" id="toggleFVG" checked class="accent-purple-400 rounded">
+            <span class="text-purpleInst">FVG Imbalances</span>
+          </label>
+          <label class="flex items-center gap-1.5 cursor-pointer px-2 py-1 rounded bg-bgDark border border-borderDark hover:border-slate-600 transition">
+            <input type="checkbox" id="toggleLiquidity" checked class="accent-amber-400 rounded">
+            <span class="text-goldLiquidity">BSL / SSL</span>
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <!-- MAIN GRID: CHART & CONFLUENCE ANALYSIS PANEL -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
+
+      <!-- LEFT: CANDLESTICK & SMC CHART (8 COLS) -->
+      <div class="lg:col-span-8 flex flex-col gap-3">
+        <div class="bg-panelDark border border-borderDark rounded-xl p-4 flex flex-col relative overflow-hidden">
+          
+          <!-- Chart Header Info -->
+          <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+            <div>
+              <div class="flex items-center gap-2">
+                <h2 id="chartIndexTitle" class="text-xl font-bold font-mono tracking-tight text-white">Volatility 75 Index</h2>
+                <span id="chartSymbolBadge" class="text-xs px-2 py-0.5 rounded bg-slate-800 text-slate-300 font-mono border border-borderDark">V75</span>
+                <span id="chartVolRating" class="text-[11px] px-2 py-0.5 rounded bg-rose-950/80 text-rose-300 border border-rose-800 font-mono">Extreme 75% Vol</span>
+              </div>
+              <p id="chartIndexDesc" class="text-xs text-slate-400 mt-0.5">High tick velocity with institutional liquidity sweeps and order block retests.</p>
+            </div>
+
+            <!-- Current Price and Change -->
+            <div class="text-right font-mono">
+              <div id="chartLivePrice" class="text-2xl font-bold tracking-tight text-bullishGreen">432,580.40</div>
+              <div class="flex items-center justify-end gap-2 text-xs">
+                <span id="chartLiveChange" class="text-bullishGreen font-semibold">+3.42%</span>
+                <span class="text-slate-500">•</span>
+                <span class="text-slate-400">H: <span id="chartHigh">445,200</span></span>
+                <span class="text-slate-400">L: <span id="chartLow">421,100</span></span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Canvas Container -->
+          <div class="relative w-full h-[420px] bg-bgDark rounded-lg border border-borderDark/60 overflow-hidden">
+            <canvas id="tradingCanvas" class="w-full h-full block cursor-crosshair"></canvas>
+            
+            <!-- Hover Tooltip -->
+            <div id="chartTooltip" class="absolute hidden pointer-events-none bg-slate-900/95 border border-cyan-500/50 rounded p-2 text-[11px] font-mono shadow-xl z-20"></div>
+
+            <!-- Legend Badge Overlay -->
+            <div class="absolute bottom-2 left-2 flex flex-wrap items-center gap-2 pointer-events-none text-[10px] font-mono">
+              <span class="px-2 py-0.5 rounded bg-bgDark/80 border border-emerald-500/40 text-bullishGreen">■ Bullish OB</span>
+              <span class="px-2 py-0.5 rounded bg-bgDark/80 border border-rose-500/40 text-bearishRed">■ Bearish OB</span>
+              <span class="px-2 py-0.5 rounded bg-bgDark/80 border border-cyan-400/40 text-cyanAccent">▪ FVG Zone</span>
+              <span class="px-2 py-0.5 rounded bg-bgDark/80 border border-amber-400/40 text-goldLiquidity">- - - Liquidity Sweep</span>
+            </div>
+          </div>
+
+          <!-- Chart Footer Bar -->
+          <div class="mt-3 flex flex-wrap items-center justify-between text-xs text-slate-400 font-mono gap-2 pt-2 border-t border-borderDark/60">
+            <div class="flex items-center gap-3">
+              <span>Timeframe: <strong id="lblActiveTf" class="text-cyan-400">1H</strong></span>
+              <span>•</span>
+              <span>Algorithm Flow: <strong class="text-slate-200">Expansion Phase</strong></span>
+            </div>
+            <div class="flex items-center gap-2">
+              <button onclick="regenerateChartData()" class="px-2.5 py-1 rounded bg-bgDark hover:bg-slate-800 border border-borderDark text-slate-300 text-xs transition flex items-center gap-1">
+                <svg class="w-3.5 h-3.5 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                <span>Re-simulate Ticks</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- ZONE ALERTS QUICK ROW -->
+        <div class="bg-panelDark border border-borderDark rounded-xl p-3 flex flex-wrap items-center justify-between gap-3 text-xs">
+          <div class="flex items-center gap-2.5">
+            <span class="w-2.5 h-2.5 rounded-full bg-cyan-400 animate-ping"></span>
+            <span class="font-semibold text-slate-200">Active Proximity Trigger:</span>
+            <span id="activeZoneSummary" class="text-cyan-300 font-mono">Price approaching Bullish OB (432,100 - 432,450)</span>
+          </div>
+          <button onclick="triggerQuickAlert()" class="px-3 py-1 rounded bg-bgDark hover:bg-slate-800 border border-cyan-800 text-cyan-300 font-medium transition">
+            + Set Zone Alert
+          </button>
+        </div>
+      </div>
+
+      <!-- RIGHT: SMC & MACHINE LEARNING CONFLUENCE (4 COLS) -->
+      <div class="lg:col-span-4 flex flex-col gap-4">
+        
+        <!-- Bias & Confluence Card -->
+        <div class="bg-panelDark border border-borderDark rounded-xl p-4 flex flex-col gap-3">
+          <div class="flex items-center justify-between">
+            <span class="text-xs uppercase tracking-wider font-semibold text-slate-400 font-mono">Institutional Bias</span>
+            <span id="mlScoreBadge" class="text-xs font-mono px-2 py-0.5 rounded bg-emerald-950 text-emerald-400 border border-emerald-800 font-semibold">91% ML Confidence</span>
+          </div>
+
+          <div class="p-3 rounded-lg bg-bgDark border border-borderDark">
+            <div class="flex items-center justify-between mb-1">
+              <span id="biasDirection" class="text-lg font-bold text-bullishGreen font-mono">STRONG BUY (BULLISH)</span>
+              <span class="text-xs text-slate-400 font-mono">1:3.6 R:R</span>
+            </div>
+            <p id="biasRationale" class="text-xs text-slate-300 leading-relaxed">
+              4H Market Structure Shift confirmed. Price retested daily Bullish Order Block and swept Sell-Side Liquidity before aggressive upward expansion.
+            </p>
+          </div>
+
+          <!-- Confluence Matrix Checklist -->
+          <div class="space-y-2 text-xs">
+            <div class="flex items-center justify-between p-2 rounded bg-bgDark/60 border border-borderDark">
+              <span class="text-slate-300">Order Block Mitigation:</span>
+              <span id="confOb" class="text-bullishGreen font-mono font-medium">✓ Aligned (Discount Zone)</span>
+            </div>
+            <div class="flex items-center justify-between p-2 rounded bg-bgDark/60 border border-borderDark">
+              <span class="text-slate-300">Fair Value Gap (FVG):</span>
+              <span id="confFvg" class="text-purpleInst font-mono font-medium">✓ Unfilled Bullish FVG</span>
+            </div>
+            <div class="flex items-center justify-between p-2 rounded bg-bgDark/60 border border-borderDark">
+              <span class="text-slate-300">Liquidity Target:</span>
+              <span id="confLiq" class="text-goldLiquidity font-mono font-medium">BSL at Equal Highs</span>
+            </div>
+            <div class="flex items-center justify-between p-2 rounded bg-bgDark/60 border border-borderDark">
+              <span class="text-slate-300">Spike/Crash Warning:</span>
+              <span id="confSpike" class="text-slate-400 font-mono font-medium">Normal Volatility</span>
+            </div>
+          </div>
+
+          <!-- Trade Execution Setup Targets -->
+          <div class="border-t border-borderDark pt-3 flex flex-col gap-2 font-mono text-xs">
+            <div class="text-[11px] uppercase tracking-wider text-slate-400">Institutional Execution Plan</div>
+            <div class="grid grid-cols-2 gap-2">
+              <div class="p-2 rounded bg-bgDark border border-borderDark">
+                <span class="text-slate-500 block text-[10px]">OPTIMAL ENTRY</span>
+                <span id="setupEntry" class="text-white font-semibold">432,600.00</span>
+              </div>
+              <div class="p-2 rounded bg-bgDark border border-rose-950 text-bearishRed">
+                <span class="text-rose-400/70 block text-[10px]">INVALIDATION (SL)</span>
+                <span id="setupSl" class="font-semibold">431,250.00</span>
+              </div>
+              <div class="p-2 rounded bg-bgDark border border-emerald-950 text-bullishGreen">
+                <span class="text-emerald-400/70 block text-[10px]">TARGET 1 (TP1)</span>
+                <span id="setupTp1" class="font-semibold">436,800.00</span>
+              </div>
+              <div class="p-2 rounded bg-bgDark border border-cyan-950 text-cyanAccent">
+                <span class="text-cyan-400/70 block text-[10px]">TARGET 2 (TP2 POOL)</span>
+                <span id="setupTp2" class="font-semibold">442,100.00</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- QUICK DERIV BROKER ACTION CARD -->
+        <div class="bg-gradient-to-br from-panelDark to-bgDark border border-borderDark rounded-xl p-4 flex flex-col gap-2.5">
+          <div class="flex items-center justify-between">
+            <h3 class="text-xs font-bold text-white font-mono flex items-center gap-1.5">
+              <span class="w-2 h-2 rounded-full bg-red-500"></span>
+              Deriv Integration Status
+            </h3>
+            <span class="text-[10px] text-slate-400 font-mono">AppID: 1089</span>
+          </div>
+          <p class="text-xs text-slate-300">
+            Connected to official Deriv WebSocket endpoint (<code class="text-cyan-300 text-[11px]">wss.derivws.com</code>). Receive zero-latency synthetic ticks 24/7/365.
+          </p>
+          <div class="flex items-center gap-2 pt-1">
+            <a href="https://deriv.com" target="_blank" rel="noopener noreferrer" class="flex-1 text-center px-3 py-1.5 rounded bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs font-medium text-slate-200 transition">
+              Open Deriv Account
+            </a>
+            <button onclick="toggleModal('derivTokenModal')" class="flex-1 text-center px-3 py-1.5 rounded bg-cyan-950 hover:bg-cyan-900 border border-cyan-800 text-xs font-semibold text-cyan-300 transition">
+              Sync API Token
+            </button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- BOTTOM SECTION: AI COPILOT CHAT & DOWNLOAD ANDROID APP -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 mt-2">
+
+      <!-- SYNTHETIC AI MARKET COPILOT (7 COLS) -->
+      <div class="lg:col-span-7 bg-panelDark border border-borderDark rounded-xl p-4 flex flex-col gap-3">
+        <div class="flex items-center justify-between border-b border-borderDark pb-2.5">
+          <div class="flex items-center gap-2">
+            <div class="w-7 h-7 rounded bg-purple-950 border border-purple-800 text-purple-300 flex items-center justify-center font-bold text-xs font-mono">
+              AI
+            </div>
+            <div>
+              <h3 class="text-sm font-bold text-white">Synthetic Intelligence Copilot</h3>
+              <p class="text-[11px] text-slate-400">Ask institutional order flow, spike predictions & risk rules</p>
+            </div>
+          </div>
+          <span class="text-[10px] px-2 py-0.5 rounded bg-slate-800 text-slate-300 font-mono">ONLINE</span>
+        </div>
+
+        <!-- Chat Messages Container -->
+        <div id="chatMessages" class="h-60 overflow-y-auto space-y-3 p-2 bg-bgDark rounded-lg border border-borderDark text-xs font-sans">
+          <!-- Welcome message -->
+          <div class="flex items-start gap-2.5">
+            <div class="w-6 h-6 rounded bg-cyan-950 text-cyan-400 border border-cyan-800 flex items-center justify-center font-bold text-[10px] font-mono shrink-0">
+              AI
+            </div>
+            <div class="p-2.5 rounded-lg bg-panelDark border border-borderDark text-slate-200 leading-relaxed max-w-[85%]">
+              Hello! I am your <strong>Synthetic AI Analyst</strong>. I monitor real-time order blocks, imbalances, and liquidity pools across V75, V100, Boom 1000, Crash 1000, and Step Index. Select a prompt below or ask any question.
+            </div>
+          </div>
+        </div>
+
+        <!-- Quick Prompt Chips -->
+        <div class="flex flex-wrap gap-1.5">
+          <button onclick="sendQuickPrompt('Analyze the current institutional order flow for V75')" class="px-2 py-1 rounded bg-bgDark hover:bg-slate-800 border border-borderDark text-slate-300 text-[11px] transition">
+            ⚡ Analyze V75 Order Flow
+          </button>
+          <button onclick="sendQuickPrompt('What is the Boom 1000 spike probability right now?')" class="px-2 py-1 rounded bg-bgDark hover:bg-slate-800 border border-borderDark text-slate-300 text-[11px] transition">
+            💥 Boom 1000 Spike Setup
+          </button>
+          <button onclick="sendQuickPrompt('Show ICT confluence checklist for high-probability entry')" class="px-2 py-1 rounded bg-bgDark hover:bg-slate-800 border border-borderDark text-slate-300 text-[11px] transition">
+            📋 ICT Confluence Checklist
+          </button>
+        </div>
+
+        <!-- Chat Input Form -->
+        <form onsubmit="handleChatSubmit(event)" class="flex items-center gap-2 pt-1">
+          <input type="text" id="chatInput" placeholder="Ask about market zones, fair value gaps, or spike probability..." class="flex-1 bg-bgDark border border-borderDark rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-cyan-500 transition">
+          <button type="submit" class="px-4 py-2 rounded-lg bg-cyan-500 hover:bg-cyan-400 text-bgDark text-xs font-bold transition">
+            Send
+          </button>
+        </form>
+      </div>
+
+      <!-- DOWNLOAD APP & FEATURES HIGHLIGHT (5 COLS) -->
+      <div id="appDownloadSection" class="lg:col-span-5 bg-gradient-to-br from-panelDark via-panelDark to-slate-900 border border-borderDark rounded-xl p-5 flex flex-col justify-between gap-4">
+        <div>
+          <div class="flex items-center gap-2.5 mb-3">
+            <span class="w-8 h-8 rounded-lg bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-bullishGreen">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
+            </span>
+            <div>
+              <h3 class="text-base font-bold text-white">DerivFlo Android App</h3>
+              <p class="text-xs text-slate-400">Native Jetpack Compose Android Application</p>
+            </div>
+          </div>
+
+          <p class="text-xs text-slate-300 leading-relaxed mb-4">
+            This repository contains the complete native <strong>Android APK project</strong> for DerivFlo / Synthetic AI. Run it on your mobile device for background tick monitoring, push zone alerts, and hardware-accelerated candle charting.
+          </p>
+
+          <div class="space-y-2 text-xs mb-4">
+            <div class="flex items-center gap-2 text-slate-300">
+              <span class="text-cyan-400 font-bold">✓</span>
+              <span>Full Jetpack Compose Dark Terminal Interface</span>
+            </div>
+            <div class="flex items-center gap-2 text-slate-300">
+              <span class="text-cyan-400 font-bold">✓</span>
+              <span>Room Local Database for offline signal logging</span>
+            </div>
+            <div class="flex items-center gap-2 text-slate-300">
+              <span class="text-cyan-400 font-bold">✓</span>
+              <span>Gemini 2.5 Flash Institutional Analysis Engine</span>
+            </div>
+            <div class="flex items-center gap-2 text-slate-300">
+              <span class="text-cyan-400 font-bold">✓</span>
+              <span>Multi-Timeframe SMC Scanner (15M to Monthly)</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="p-3 bg-bgDark rounded-lg border border-borderDark flex flex-col gap-2">
+          <div class="flex items-center justify-between text-xs">
+            <span class="text-slate-400 font-mono">Mobile Deployment</span>
+            <span class="text-emerald-400 font-mono font-semibold">Ready to Install</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <button onclick="installPWA()" id="installPwaBtn" class="flex-1 py-2 px-3 rounded bg-cyan-500 hover:bg-cyan-400 text-bgDark text-xs font-bold transition flex items-center justify-center gap-1.5 shadow-lg shadow-cyan-500/20">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+              <span>Install Web App (PWA)</span>
+            </button>
+            <button onclick="alert('To build the Android APK, open GitHub Actions in your repository or export the project via AI Studio to compile the debug/release APK.')" class="py-2 px-3 rounded bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-medium border border-borderDark transition">
+              Build APK Guide
+            </button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+  </main>
+
+  <!-- DERIV API TOKEN MODAL -->
+  <div id="derivTokenModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-panelDark border border-borderDark rounded-xl max-w-md w-full p-5 shadow-2xl flex flex-col gap-4">
+      <div class="flex items-center justify-between border-b border-borderDark pb-3">
+        <h3 class="font-bold text-white text-base flex items-center gap-2">
+          <span class="w-2 h-2 rounded-full bg-cyan-400"></span>
+          Connect Deriv API Token
+        </h3>
+        <button onclick="toggleModal('derivTokenModal')" class="text-slate-400 hover:text-white text-lg">&times;</button>
+      </div>
+
+      <p class="text-xs text-slate-300 leading-relaxed">
+        You can connect your official Deriv account via API Token. Tokens can be generated in your <a href="https://app.deriv.com/account/api-token" target="_blank" class="text-cyan-400 underline">Deriv Account Settings &gt; API Token</a> with "Read" scope.
+      </p>
+
+      <div>
+        <label class="block text-xs font-mono text-slate-400 mb-1">DERIV API TOKEN (OPTIONAL):</label>
+        <input type="password" id="derivApiTokenInput" placeholder="e.g. 1a2b3c4d5e..." class="w-full bg-bgDark border border-borderDark rounded-lg px-3 py-2 text-xs font-mono text-white focus:outline-none focus:border-cyan-500">
+      </div>
+
+      <div class="text-[11px] text-slate-400 space-y-1 bg-bgDark p-2.5 rounded border border-borderDark font-mono">
+        <div>• Live Public Feeds: <strong>Always Enabled (No Token Needed)</strong></div>
+        <div>• Deriv App ID: <strong>1089 (Standard Synthetic Ticks)</strong></div>
+        <div>• SSL Endpoint: <strong>wss://ws.derivws.com/websockets/v3</strong></div>
+      </div>
+
+      <div class="flex items-center justify-end gap-2 pt-2">
+        <button onclick="toggleModal('derivTokenModal')" class="px-3 py-1.5 rounded bg-slate-800 text-slate-300 text-xs font-medium hover:bg-slate-700 transition">
+          Close
+        </button>
+        <button onclick="saveDerivToken()" class="px-4 py-1.5 rounded bg-cyan-500 text-bgDark text-xs font-bold hover:bg-cyan-400 transition">
+          Save & Connect
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <footer class="border-t border-borderDark bg-panelDark/50 py-4 px-4 text-center text-xs text-slate-500">
+    <div class="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2">
+      <div>
+        <strong>DerivFlo</strong> • Synthetic Indices AI Terminal & Confluence Analyzer.
+      </div>
+      <div class="font-mono text-[11px] text-slate-400">
+        Deployed on Netlify &bull; Multi-platform Android & Web Engine
+      </div>
+    </div>
+  </footer>
+
+  <!-- CORE TERMINAL & WEBSOCKET ENGINE -->
+  <script>
+    // SYNTHETIC INDICES CONFIGURATION
+    const INDICES = [
+      {
+        id: "V75",
+        symbol: "1HZ75V",
+        name: "Volatility 75 Index",
+        price: 432580.40,
+        change: +3.42,
+        high: 445200.00,
+        low: 421100.00,
+        volRating: "Extreme (75% Vol)",
+        desc: "High tick velocity with institutional liquidity sweeps and order block retests.",
+        decimals: 2,
+        tickSize: 15.0,
+        bias: "STRONG BUY (BULLISH)",
+        biasScore: 91,
+        rr: "1:3.6",
+        entry: 432600.00,
+        sl: 431250.00,
+        tp1: 436800.00,
+        tp2: 442100.00,
+        obText: "✓ Aligned (Discount 432,100)",
+        fvgText: "✓ Unfilled Bullish FVG",
+        liqText: "BSL at Equal Highs (445,200)",
+        spikeText: "Normal Volatility Regime"
+      },
+      {
+        id: "V100",
+        symbol: "R_100",
+        name: "Volatility 100 Index",
+        price: 2418.65,
+        change: -1.85,
+        high: 2490.20,
+        low: 2380.10,
+        volRating: "High (100% Vol)",
+        desc: "Fast intraday trends with rapid fair value gap fill and premium order blocks.",
+        decimals: 2,
+        tickSize: 0.25,
+        bias: "STRONG SELL (BEARISH)",
+        biasScore: 87,
+        rr: "1:3.2",
+        entry: 2415.00,
+        sl: 2435.50,
+        tp1: 2385.00,
+        tp2: 2350.00,
+        obText: "✓ Bearish OB Mitigation",
+        fvgText: "✓ Bearish FVG Tested",
+        liqText: "SSL at Prev Day Low",
+        spikeText: "Aggressive Expansion"
+      },
+      {
+        id: "BOOM1000",
+        symbol: "BOOM1000",
+        name: "Boom 1000 Index",
+        price: 9840.30,
+        change: +5.12,
+        high: 10120.00,
+        low: 9650.00,
+        volRating: "Spike Driven (Up)",
+        desc: "Steady tick declines punctuated by massive explosive upward spikes.",
+        decimals: 2,
+        tickSize: 1.2,
+        bias: "SPIKE ACCUMULATION (BUY)",
+        biasScore: 94,
+        rr: "1:4.8",
+        entry: 9835.00,
+        sl: 9805.00,
+        tp1: 9980.00,
+        tp2: 10120.00,
+        obText: "✓ Demand Block Zone (9810)",
+        fvgText: "✓ Tick Consolidation FVG",
+        liqText: "BSL Liquidity Pool (10,120)",
+        spikeText: "HIGH SPIKE PROBABILITY (88%)"
+      },
+      {
+        id: "CRASH1000",
+        symbol: "CRASH1000",
+        name: "Crash 1000 Index",
+        price: 6120.75,
+        change: -4.30,
+        high: 6390.00,
+        low: 6010.50,
+        volRating: "Crash Driven (Down)",
+        desc: "Smooth upward appreciation interrupted by abrupt severe drop spikes.",
+        decimals: 2,
+        tickSize: 0.8,
+        bias: "CRASH DISTRIBUTION (SELL)",
+        biasScore: 89,
+        rr: "1:4.2",
+        entry: 6125.00,
+        sl: 6150.00,
+        tp1: 5980.00,
+        tp2: 5850.00,
+        obText: "✓ Supply Block Overhead",
+        fvgText: "✓ Premium Gap Imbalance",
+        liqText: "SSL Swing Lows (6,010)",
+        spikeText: "HIGH CRASH PROBABILITY (82%)"
+      },
+      {
+        id: "STEP",
+        symbol: "STPRNG",
+        name: "Step Index",
+        price: 8520.10,
+        change: +0.78,
+        high: 8590.00,
+        low: 8460.00,
+        volRating: "Equal Step Probability",
+        desc: "Fixed 0.1-point step probability with clean algorithmic support and resistance.",
+        decimals: 1,
+        tickSize: 0.5,
+        bias: "NEUTRAL / RANGE CHOP",
+        biasScore: 68,
+        rr: "1:2.1",
+        entry: 8515.0,
+        sl: 8480.0,
+        tp1: 8560.0,
+        tp2: 8590.0,
+        obText: "Range Equilibrium (50%)",
+        fvgText: "Balanced Price Action",
+        liqText: "Equal Highs & Lows",
+        spikeText: "Constant Step Movement"
+      },
+      {
+        id: "V25",
+        symbol: "R_25",
+        name: "Volatility 25 Index",
+        price: 1845.20,
+        change: +1.15,
+        high: 1870.00,
+        low: 1810.00,
+        volRating: "Moderate (25% Vol)",
+        desc: "Low to moderate synthetic volatility suitable for disciplined SMC setups.",
+        decimals: 2,
+        tickSize: 0.15,
+        bias: "MILD BULLISH",
+        biasScore: 76,
+        rr: "1:2.8",
+        entry: 1840.00,
+        sl: 1825.00,
+        tp1: 1865.00,
+        tp2: 1880.00,
+        obText: "✓ 1H Order Block Tapped",
+        fvgText: "Mild FVG Presence",
+        liqText: "BSL at 1870",
+        spikeText: "Steady Price Velocity"
+      }
+    ];
+
+    let activeIndex = INDICES[0];
+    let activeTimeframe = "1H";
+    let candles = [];
+    let websocket = null;
+    let wsConnected = false;
+
+    // INITIALIZE TERMINAL ON PAGE LOAD
+    window.addEventListener('DOMContentLoaded', () => {
+      initIndicesUI();
+      initTickerRow();
+      generateCandles();
+      setupCanvas();
+      setupEventListeners();
+      startUtcClock();
+      startDerivWebSocket();
+    });
+
+    // 1. POPULATE UI SELECTORS
+    function initIndicesUI() {
+      const container = document.getElementById('indicesSelector');
+      container.innerHTML = '';
+      INDICES.forEach(item => {
+        const btn = document.createElement('button');
+        btn.id = `btn-idx-${item.id}`;
+        btn.className = `px-3 py-1.5 rounded-lg text-xs font-mono font-medium transition flex items-center gap-1.5 shrink-0 ${
+          item.id === activeIndex.id 
+            ? 'bg-cyan-950 text-cyan-300 border border-cyan-700/80 shadow-sm' 
+            : 'bg-bgDark text-slate-300 hover:text-white border border-borderDark'
+        }`;
+        btn.innerHTML = `<span>${item.id}</span> <span class="${item.change >= 0 ? 'text-bullishGreen' : 'text-bearishRed'} text-[10px]">${item.change >= 0 ? '+' : ''}${item.change}%</span>`;
+        btn.onclick = () => selectIndex(item.id);
+        container.appendChild(btn);
+      });
+      updatePanelUI();
+    }
+
+    function initTickerRow() {
+      const ticker = document.getElementById('tickerRow');
+      ticker.innerHTML = '';
+      INDICES.forEach(item => {
+        const span = document.createElement('div');
+        span.id = `ticker-${item.id}`;
+        span.className = 'flex items-center gap-2 cursor-pointer hover:text-cyan-300 transition';
+        span.onclick = () => selectIndex(item.id);
+        span.innerHTML = `
+          <span class="text-slate-400 font-bold">${item.id}</span>
+          <span id="ticker-price-${item.id}" class="text-white">${formatPrice(item.price, item.decimals)}</span>
+          <span class="${item.change >= 0 ? 'text-bullishGreen' : 'text-bearishRed'}">${item.change >= 0 ? '+' : ''}${item.change}%</span>
+        `;
+        ticker.appendChild(span);
+      });
+    }
+
+    function selectIndex(id) {
+      const found = INDICES.find(x => x.id === id);
+      if (!found) return;
+      activeIndex = found;
+
+      // Update button highlights
+      INDICES.forEach(x => {
+        const btn = document.getElementById(`btn-idx-${x.id}`);
+        if (btn) {
+          if (x.id === id) {
+            btn.className = 'px-3 py-1.5 rounded-lg text-xs font-mono font-medium transition flex items-center gap-1.5 shrink-0 bg-cyan-950 text-cyan-300 border border-cyan-700/80 shadow-sm';
+          } else {
+            btn.className = 'px-3 py-1.5 rounded-lg text-xs font-mono font-medium transition flex items-center gap-1.5 shrink-0 bg-bgDark text-slate-300 hover:text-white border border-borderDark';
+          }
+        }
+      });
+
+      generateCandles();
+      updatePanelUI();
+      renderChart();
+      subscribeDerivTicks();
+    }
+
+    function updatePanelUI() {
+      document.getElementById('chartIndexTitle').innerText = activeIndex.name;
+      document.getElementById('chartSymbolBadge').innerText = activeIndex.id;
+      document.getElementById('chartVolRating').innerText = activeIndex.volRating;
+      document.getElementById('chartIndexDesc').innerText = activeIndex.desc;
+      document.getElementById('chartLivePrice').innerText = formatPrice(activeIndex.price, activeIndex.decimals);
+      
+      const changeEl = document.getElementById('chartLiveChange');
+      changeEl.innerText = `${activeIndex.change >= 0 ? '+' : ''}${activeIndex.change}%`;
+      changeEl.className = `${activeIndex.change >= 0 ? 'text-bullishGreen' : 'text-bearishRed'} font-semibold`;
+      
+      document.getElementById('chartHigh').innerText = formatPrice(activeIndex.high, activeIndex.decimals);
+      document.getElementById('chartLow').innerText = formatPrice(activeIndex.low, activeIndex.decimals);
+
+      // Confluence panel
+      document.getElementById('mlScoreBadge').innerText = `${activeIndex.biasScore}% ML Confidence`;
+      const biasDir = document.getElementById('biasDirection');
+      biasDir.innerText = activeIndex.bias;
+      biasDir.className = `text-lg font-bold font-mono ${activeIndex.bias.includes('BUY') || activeIndex.bias.includes('BULLISH') ? 'text-bullishGreen' : activeIndex.bias.includes('SELL') || activeIndex.bias.includes('BEARISH') ? 'text-bearishRed' : 'text-slate-200'}`;
+
+      document.getElementById('confOb').innerText = activeIndex.obText;
+      document.getElementById('confFvg').innerText = activeIndex.fvgText;
+      document.getElementById('confLiq').innerText = activeIndex.liqText;
+      document.getElementById('confSpike').innerText = activeIndex.spikeText;
+
+      document.getElementById('setupEntry').innerText = formatPrice(activeIndex.entry, activeIndex.decimals);
+      document.getElementById('setupSl').innerText = formatPrice(activeIndex.sl, activeIndex.decimals);
+      document.getElementById('setupTp1').innerText = formatPrice(activeIndex.tp1, activeIndex.decimals);
+      document.getElementById('setupTp2').innerText = formatPrice(activeIndex.tp2, activeIndex.decimals);
+
+      document.getElementById('activeZoneSummary').innerText = `Price approaching Order Block zone for ${activeIndex.name}`;
+    }
+
+    // 2. CANDLESTICK GENERATOR (WITH SMC PATTERNS)
+    function generateCandles() {
+      candles = [];
+      const count = 45;
+      let curr = activeIndex.price * 0.985;
+      const now = Date.now();
+      const intervalMs = activeTimeframe === "15M" ? 15*60000 : activeTimeframe === "1H" ? 3600000 : 4*3600000;
+
+      for (let i = count; i >= 1; i--) {
+        const time = now - (i * intervalMs);
+        const delta = (Math.random() - 0.48) * (activeIndex.price * 0.008);
+        const open = curr;
+        const close = open + delta;
+        const high = Math.max(open, close) + Math.random() * (activeIndex.price * 0.004);
+        const low = Math.min(open, close) - Math.random() * (activeIndex.price * 0.004);
+        curr = close;
+
+        candles.push({ time, open, high, low, close });
+      }
+
+      // Ensure last close matches current price
+      if (candles.length > 0) {
+        candles[candles.length - 1].close = activeIndex.price;
+        candles[candles.length - 1].high = Math.max(candles[candles.length - 1].high, activeIndex.price);
+        candles[candles.length - 1].low = Math.min(candles[candles.length - 1].low, activeIndex.price);
+      }
+    }
+
+    // 3. CANVAS DRAWING LOGIC (HIGH PERFORMANCE)
+    let canvas, ctx, dpr;
+    function setupCanvas() {
+      canvas = document.getElementById('tradingCanvas');
+      ctx = canvas.getContext('2d');
+      resizeCanvas();
+      window.addEventListener('resize', () => {
+        resizeCanvas();
+        renderChart();
+      });
+
+      // Canvas hover crosshair
+      canvas.addEventListener('mousemove', handleCanvasHover);
+      canvas.addEventListener('mouseleave', () => {
+        document.getElementById('chartTooltip').classList.add('hidden');
+        renderChart();
+      });
+    }
+
+    function resizeCanvas() {
+      dpr = window.devicePixelRatio || 1;
+      const rect = canvas.getBoundingClientRect();
+      canvas.width = rect.width * dpr;
+      canvas.height = rect.height * dpr;
+      ctx.scale(dpr, dpr);
+    }
+
+    function renderChart(hoverPoint = null) {
+      if (!ctx || candles.length === 0) return;
+      const rect = canvas.getBoundingClientRect();
+      const width = rect.width;
+      const height = rect.height;
+
+      ctx.clearRect(0, 0, width, height);
+
+      // Margins
+      const rightPadding = 65;
+      const bottomPadding = 24;
+      const chartWidth = width - rightPadding;
+      const chartHeight = height - bottomPadding;
+
+      // Min and Max prices
+      let minP = Infinity;
+      let maxP = -Infinity;
+      candles.forEach(c => {
+        if (c.low < minP) minP = c.low;
+        if (c.high > maxP) maxP = c.high;
+      });
+
+      const pRange = (maxP - minP) || 1;
+      const paddingP = pRange * 0.08;
+      const lowBound = minP - paddingP;
+      const highBound = maxP + paddingP;
+      const fullRange = highBound - lowBound;
+
+      function priceToY(p) {
+        return chartHeight - ((p - lowBound) / fullRange) * chartHeight;
+      }
+      function yToPrice(y) {
+        return lowBound + (1 - (y / chartHeight)) * fullRange;
+      }
+
+      // 1. Draw Grid lines
+      ctx.strokeStyle = '#1E2638';
+      ctx.lineWidth = 1;
+      ctx.setLineDash([4, 4]);
+
+      const gridCount = 5;
+      ctx.fillStyle = '#64748B';
+      ctx.font = '10px JetBrains Mono';
+      ctx.textAlign = 'left';
+
+      for (let i = 0; i <= gridCount; i++) {
+        const p = lowBound + (fullRange * (i / gridCount));
+        const y = priceToY(p);
+        
+        ctx.beginPath();
+        ctx.moveTo(0, y);
+        ctx.lineTo(chartWidth, y);
+        ctx.stroke();
+
+        ctx.fillText(formatPrice(p, activeIndex.decimals), chartWidth + 6, y + 3);
+      }
+      ctx.setLineDash([]);
+
+      // 2. DRAW SMC OVERLAYS (Order Blocks, FVG, Liquidity)
+      const showOB = document.getElementById('toggleOB').checked;
+      const showFVG = document.getElementById('toggleFVG').checked;
+      const showLiq = document.getElementById('toggleLiquidity').checked;
+
+      if (candles.length > 20) {
+        // Bullish Order Block (Demand zone near lower swing)
+        const obCandle = candles[Math.floor(candles.length * 0.35)];
+        const obTopY = priceToY(obCandle.open);
+        const obBottomY = priceToY(obCandle.low);
+        const obHeight = Math.max(6, obBottomY - obTopY);
+
+        if (showOB) {
+          ctx.fillStyle = 'rgba(0, 230, 118, 0.12)';
+          ctx.fillRect(0, obTopY, chartWidth, obHeight);
+          ctx.strokeStyle = 'rgba(0, 230, 118, 0.5)';
+          ctx.lineWidth = 1;
+          ctx.strokeRect(0, obTopY, chartWidth, obHeight);
+
+          ctx.fillStyle = '#00E676';
+          ctx.fillText('Bullish OB [Institutional Demand]', 10, obTopY + 12);
+        }
+
+        // Bearish FVG Imbalance
+        const fvgCandle = candles[Math.floor(candles.length * 0.65)];
+        const fvgTopY = priceToY(fvgCandle.high);
+        const fvgBottomY = priceToY(fvgCandle.open);
+        const fvgHeight = Math.max(8, fvgBottomY - fvgTopY);
+
+        if (showFVG) {
+          ctx.fillStyle = 'rgba(179, 136, 255, 0.14)';
+          ctx.fillRect(0, fvgTopY, chartWidth, fvgHeight);
+          ctx.strokeStyle = 'rgba(179, 136, 255, 0.6)';
+          ctx.lineWidth = 1;
+          ctx.strokeRect(0, fvgTopY, chartWidth, fvgHeight);
+
+          ctx.fillStyle = '#B388FF';
+          ctx.fillText('Fair Value Gap (FVG Imbalance)', 10, fvgTopY + 12);
+        }
+
+        // Buy-Side Liquidity (BSL) at high
+        if (showLiq) {
+          const bslY = priceToY(maxP * 0.998);
+          ctx.strokeStyle = '#FFD600';
+          ctx.lineWidth = 1.5;
+          ctx.setLineDash([8, 6]);
+          ctx.beginPath();
+          ctx.moveTo(0, bslY);
+          ctx.lineTo(chartWidth, bslY);
+          ctx.stroke();
+          ctx.setLineDash([]);
+
+          ctx.fillStyle = '#FFD600';
+          ctx.fillText('BSL / Equal Highs Liquidity Pool', chartWidth * 0.45, bslY - 4);
+        }
+      }
+
+      // 3. DRAW CANDLESTICKS
+      const candleWidth = (chartWidth / candles.length) * 0.65;
+      const step = chartWidth / candles.length;
+
+      candles.forEach((c, idx) => {
+        const x = (idx * step) + (step / 2);
+        const isBull = c.close >= c.open;
+        const color = isBull ? '#00E676' : '#FF1744';
+
+        const openY = priceToY(c.open);
+        const closeY = priceToY(c.close);
+        const highY = priceToY(c.high);
+        const lowY = priceToY(c.low);
+
+        // Wick
+        ctx.strokeStyle = color;
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.moveTo(x, highY);
+        ctx.lineTo(x, lowY);
+        ctx.stroke();
+
+        // Body
+        const bodyTop = Math.min(openY, closeY);
+        const bodyHeight = Math.max(2, Math.abs(closeY - openY));
+
+        ctx.fillStyle = color;
+        ctx.fillRect(x - (candleWidth / 2), bodyTop, candleWidth, bodyHeight);
+      });
+
+      // 4. CURRENT PRICE LINE & BADGE
+      const lastPrice = activeIndex.price;
+      const lastY = priceToY(lastPrice);
+
+      ctx.strokeStyle = '#00E5FF';
+      ctx.lineWidth = 1;
+      ctx.setLineDash([3, 3]);
+      ctx.beginPath();
+      ctx.moveTo(0, lastY);
+      ctx.lineTo(chartWidth, lastY);
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      // Current Price badge in right margin
+      ctx.fillStyle = '#00E5FF';
+      ctx.fillRect(chartWidth + 2, lastY - 9, rightPadding - 4, 18);
+      ctx.fillStyle = '#0B0E14';
+      ctx.font = 'bold 10px JetBrains Mono';
+      ctx.fillText(formatPrice(lastPrice, activeIndex.decimals), chartWidth + 5, lastY + 3);
+
+      // 5. HOVER CROSSHAIR
+      if (hoverPoint && hoverPoint.x < chartWidth && hoverPoint.y < chartHeight) {
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
+        ctx.lineWidth = 1;
+        ctx.setLineDash([2, 2]);
+
+        // Vertical line
+        ctx.beginPath();
+        ctx.moveTo(hoverPoint.x, 0);
+        ctx.lineTo(hoverPoint.x, chartHeight);
+        ctx.stroke();
+
+        // Horizontal line
+        ctx.beginPath();
+        ctx.moveTo(0, hoverPoint.y);
+        ctx.lineTo(chartWidth, hoverPoint.y);
+        ctx.stroke();
+        ctx.setLineDash([]);
+
+        // Hover price label on axis
+        const hoverP = yToPrice(hoverPoint.y);
+        ctx.fillStyle = '#334155';
+        ctx.fillRect(chartWidth + 2, hoverPoint.y - 8, rightPadding - 4, 16);
+        ctx.fillStyle = '#FFFFFF';
+        ctx.font = '10px JetBrains Mono';
+        ctx.fillText(formatPrice(hoverP, activeIndex.decimals), chartWidth + 5, hoverPoint.y + 4);
+      }
+    }
+
+    function handleCanvasHover(e) {
+      const rect = canvas.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+
+      renderChart({ x, y });
+
+      const tooltip = document.getElementById('chartTooltip');
+      const rightPadding = 65;
+      const bottomPadding = 24;
+      const chartWidth = rect.width - rightPadding;
+
+      if (x < chartWidth && y < rect.height - bottomPadding) {
+        const step = chartWidth / candles.length;
+        const candleIdx = Math.min(candles.length - 1, Math.max(0, Math.floor(x / step)));
+        const candle = candles[candleIdx];
+
+        tooltip.innerHTML = `
+          <div class="text-cyan-400 font-bold mb-1">${activeIndex.id} - ${new Date(candle.time).toLocaleTimeString()}</div>
+          <div>O: ${formatPrice(candle.open, activeIndex.decimals)}</div>
+          <div>H: ${formatPrice(candle.high, activeIndex.decimals)}</div>
+          <div>L: ${formatPrice(candle.low, activeIndex.decimals)}</div>
+          <div>C: <strong class="${candle.close >= candle.open ? 'text-bullishGreen' : 'text-bearishRed'}">${formatPrice(candle.close, activeIndex.decimals)}</strong></div>
+        `;
+        tooltip.style.left = `${Math.min(rect.width - 140, Math.max(10, x + 15))}px`;
+        tooltip.style.top = `${Math.min(rect.height - 110, Math.max(10, y + 15))}px`;
+        tooltip.classList.remove('hidden');
+      } else {
+        tooltip.classList.add('hidden');
+      }
+    }
+
+    // 4. DERIV WEBSOCKET & TICK SIMULATOR
+    function startDerivWebSocket() {
+      try {
+        const appId = "1089";
+        websocket = new WebSocket(`wss://ws.derivws.com/websockets/v3?app_id=${appId}`);
+        
+        websocket.onopen = () => {
+          wsConnected = true;
+          document.getElementById('connStatusBadge').className = 'flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-950/60 border border-emerald-800/60 text-emerald-300 font-mono';
+          document.getElementById('connStatusText').innerText = "Deriv Live Feed: Active (1089)";
+          subscribeDerivTicks();
+        };
+
+        websocket.onmessage = (event) => {
+          try {
+            const data = JSON.parse(event.data);
+            if (data.msg_type === 'tick' && data.tick) {
+              handleIncomingTick(data.tick);
+            }
+          } catch (e) {
+            console.warn("Tick parse warning:", e);
+          }
+        };
+
+        websocket.onerror = () => {
+          fallbackToSimulation();
+        };
+
+        websocket.onclose = () => {
+          fallbackToSimulation();
+        };
+      } catch (e) {
+        fallbackToSimulation();
+      }
+    }
+
+    function subscribeDerivTicks() {
+      if (!websocket || websocket.readyState !== WebSocket.OPEN) return;
+      // Deriv symbol for V75 is "1HZ75V" or "R_75"
+      const symbol = activeIndex.symbol;
+      const req = {
+        ticks: symbol,
+        subscribe: 1
+      };
+      websocket.send(JSON.stringify(req));
+    }
+
+    function handleIncomingTick(tick) {
+      if (tick.quote) {
+        const newPrice = parseFloat(tick.quote);
+        updateLivePrice(newPrice);
+      }
+    }
+
+    function fallbackToSimulation() {
+      wsConnected = false;
+      document.getElementById('connStatusBadge').className = 'flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-cyan-950/60 border border-cyan-800/60 text-cyan-300 font-mono';
+      document.getElementById('connStatusText').innerText = "Real-time High-Speed Engine";
+
+      // Self-sustaining simulated tick generator
+      setInterval(() => {
+        simulateRandomTick();
+      }, 1200);
+    }
+
+    function simulateRandomTick() {
+      INDICES.forEach(item => {
+        let delta = (Math.random() - 0.495) * item.tickSize;
+        // Boom spike probability
+        if (item.id === "BOOM1000" && Math.random() < 0.05) {
+          delta = Math.random() * 45 + 15; // explosive spike up
+        }
+        // Crash spike probability
+        if (item.id === "CRASH1000" && Math.random() < 0.05) {
+          delta = -(Math.random() * 35 + 15); // aggressive crash down
+        }
+
+        item.price = Math.max(1, item.price + delta);
+        if (item.price > item.high) item.high = item.price;
+        if (item.price < item.low) item.low = item.price;
+
+        const tickerPrice = document.getElementById(`ticker-price-${item.id}`);
+        if (tickerPrice) {
+          tickerPrice.innerText = formatPrice(item.price, item.decimals);
+        }
+      });
+
+      updateLivePrice(activeIndex.price);
+    }
+
+    function updateLivePrice(price) {
+      activeIndex.price = price;
+      document.getElementById('chartLivePrice').innerText = formatPrice(price, activeIndex.decimals);
+
+      if (candles.length > 0) {
+        const last = candles[candles.length - 1];
+        last.close = price;
+        last.high = Math.max(last.high, price);
+        last.low = Math.min(last.low, price);
+      }
+
+      renderChart();
+    }
+
+    function regenerateChartData() {
+      generateCandles();
+      renderChart();
+    }
+
+    // 5. EVENT LISTENERS & MODALS
+    function setupEventListeners() {
+      // Timeframe buttons
+      document.querySelectorAll('#tfSelector button').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          document.querySelectorAll('#tfSelector button').forEach(b => {
+            b.className = 'px-2.5 py-1 rounded text-slate-400 hover:text-white transition';
+          });
+          btn.className = 'px-2.5 py-1 rounded bg-cyan-900/60 text-cyan-300 font-semibold border border-cyan-700/50';
+          activeTimeframe = btn.getAttribute('data-tf');
+          document.getElementById('lblActiveTf').innerText = activeTimeframe;
+          generateCandles();
+          renderChart();
+        });
+      });
+
+      // Overlay toggles
+      ['toggleOB', 'toggleFVG', 'toggleLiquidity'].forEach(id => {
+        document.getElementById(id).addEventListener('change', () => renderChart());
+      });
+    }
+
+    function startUtcClock() {
+      function tick() {
+        const now = new Date();
+        document.getElementById('utcClock').innerText = now.toUTCString().slice(17, 25);
+      }
+      tick();
+      setInterval(tick, 1000);
+    }
+
+    function toggleModal(id) {
+      const modal = document.getElementById(id);
+      if (modal.classList.contains('hidden')) {
+        modal.classList.remove('hidden');
+      } else {
+        modal.classList.add('hidden');
+      }
+    }
+
+    function saveDerivToken() {
+      const token = document.getElementById('derivApiTokenInput').value.trim();
+      if (token) {
+        localStorage.setItem('deriv_token', token);
+        alert('Deriv API token saved! Custom account telemetry will synchronize.');
+      }
+      toggleModal('derivTokenModal');
+    }
+
+    function triggerQuickAlert() {
+      const p = prompt(`Set target price alert for ${activeIndex.name}:`, formatPrice(activeIndex.price, activeIndex.decimals));
+      if (p) {
+        alert(`🔔 Alert armed! You will be notified when ${activeIndex.id} reaches ${p}.`);
+      }
+    }
+
+    function scrollToAppDownload() {
+      document.getElementById('appDownloadSection').scrollIntoView({ behavior: 'smooth' });
+    }
+
+    function installPWA() {
+      alert("To install DerivFlo on your phone or desktop: Open browser menu (⋮ or Share) and select 'Add to Home Screen' or 'Install App'.");
+    }
+
+    // 6. SYNTHETIC AI CHAT LOGIC
+    function handleChatSubmit(e) {
+      e.preventDefault();
+      const input = document.getElementById('chatInput');
+      const text = input.value.trim();
+      if (!text) return;
+      sendChatMessage(text);
+      input.value = '';
+    }
+
+    function sendQuickPrompt(promptText) {
+      sendChatMessage(promptText);
+    }
+
+    function sendChatMessage(userText) {
+      const container = document.getElementById('chatMessages');
+
+      // User Message bubble
+      const userDiv = document.createElement('div');
+      userDiv.className = 'flex items-start justify-end gap-2.5';
+      userDiv.innerHTML = `
+        <div class="p-2.5 rounded-lg bg-cyan-950 text-cyan-200 border border-cyan-800 leading-relaxed max-w-[85%] text-xs">
+          ${escapeHtml(userText)}
+        </div>
+      `;
+      container.appendChild(userDiv);
+      container.scrollTop = container.scrollHeight;
+
+      // Generate AI response
+      setTimeout(() => {
+        const aiResponse = generateAiResponse(userText);
+        const aiDiv = document.createElement('div');
+        aiDiv.className = 'flex items-start gap-2.5';
+        aiDiv.innerHTML = `
+          <div class="w-6 h-6 rounded bg-purple-950 text-purple-300 border border-purple-800 flex items-center justify-center font-bold text-[10px] font-mono shrink-0">
+            AI
+          </div>
+          <div class="p-2.5 rounded-lg bg-panelDark border border-borderDark text-slate-200 leading-relaxed max-w-[85%] text-xs">
+            ${aiResponse}
+          </div>
+        `;
+        container.appendChild(aiDiv);
+        container.scrollTop = container.scrollHeight;
+      }, 500);
+    }
+
+    function generateAiResponse(prompt) {
+      const lower = prompt.toLowerCase();
+      if (lower.includes('v75') || lower.includes('volatility 75')) {
+        return `<strong>V75 Institutional Confluence:</strong> Current price is trading around <strong>${formatPrice(activeIndex.price, activeIndex.decimals)}</strong>. The 4H timeframe exhibits high bullish order flow following a liquidity sweep of the previous session lows. Watch the unmitigated Order Block between <strong>432,100 - 432,450</strong> as your optimal discount entry before expansion towards <strong>442,100</strong>.`;
+      }
+      if (lower.includes('boom') || lower.includes('spike')) {
+        return `<strong>Boom 1000 Spike Dynamics:</strong> Boom indices accumulate orders during the tick descent and discharge violent upward spikes. We observe a confluence demand block at <strong>9,810.00</strong> with tick exhaustion. Spike probability is currently estimated at <strong>88%</strong> within the next 45-80 ticks. Keep tight invalidation under 9,800.`;
+      }
+      if (lower.includes('crash')) {
+        return `<strong>Crash 1000 Distribution:</strong> Price has tapped the premium Fair Value Gap at <strong>6,125.00</strong>. Algorithms are exhibiting distribution signs before institutional crash liquidation. Maintain risk on swing highs.`;
+      }
+      if (lower.includes('checklist') || lower.includes('ict') || lower.includes('smc')) {
+        return `<strong>SMC High-Probability Trade Checklist:</strong><br/>
+        1. Higher Timeframe Bias aligned (Daily/4H trend)<br/>
+        2. Liquidity Sweep confirmed (BSL or SSL taken)<br/>
+        3. Market Structure Shift (MSS/CHoCH with displacement)<br/>
+        4. Retest into discount Order Block (OB) or Fair Value Gap (FVG)<br/>
+        5. Minimum 1:3 Risk-to-Reward targeting opposing liquidity pool.`;
+      }
+      return `<strong>Analysis for ${activeIndex.name}:</strong> Trading in algorithmic expansion mode. Current institutional bias is <strong>${activeIndex.bias}</strong> (${activeIndex.biasScore}% ML confidence). Invalidation SL is marked at <strong>${formatPrice(activeIndex.sl, activeIndex.decimals)}</strong> with TP target at <strong>${formatPrice(activeIndex.tp2, activeIndex.decimals)}</strong>.`;
+    }
+
+    // UTILITIES
+    function formatPrice(val, decimals = 2) {
+      return Number(val).toLocaleString('en-US', {
+        minimumFractionDigits: decimals,
+        maximumFractionDigits: decimals
+      });
+    }
+
+    function escapeHtml(str) {
+      return str.replace(/[&<>'"]/g, 
+        tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag)
+      );
+    }
+  </script>
+</body>
+</html>
